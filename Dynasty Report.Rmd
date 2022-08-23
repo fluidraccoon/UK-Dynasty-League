@@ -1,5 +1,5 @@
 ---
-title: "2022 NFL Dynasty Report - Week 1"
+title: "2022 UK Dynasty League - Week 1"
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
   rmarkdown::render(input_file,
@@ -28,13 +28,12 @@ library(rvest)
 library(xml2)
 library(lubridate)
 
-setwd('C:/Users/danie/OneDrive/Documents/DynastyNFL/')
+setwd('C:/Users/danie/OneDrive/Documents/UK-Dynasty-League/')
 
 season <- 2022
-no_of_qbs <- 1
+no_of_qbs <- 2
 
-league_id <- sleeper_userleagues('DanCoulton') %>% filter(league_name == 'NFL Dynasty') %>% pull(league_id)
-# league_id <- 659068468825530368 # 2021 league id
+league_id <- sleeper_userleagues('DanCoulton') %>% filter(league_name == 'UK Dynasty League ') %>% pull(league_id)
 dynasty_conn <- sleeper_connect(season = season, league_id = league_id)
 
 ff_league <- ff_league(dynasty_conn)
@@ -303,66 +302,26 @@ matchup_id <- matchup_data %>%
 
 ```{r get historic scores, include = F, message = F}
 
-league_id2021 <- '659068468825530368'
-league_id2020 <- '524711968751366144'
-league_id2019 <- '401733459510312960'
+# league_id2021 <- '659068468825530368'
 
-### 2019 ###
-datalist_gameweek = list()
-for (i in gameweek_start:16) {
-  matchupRaw <- GET(paste('https://api.sleeper.app/v1/league/',league_id2019,'/matchups/', i, sep=""))
-  matchupParsed <- content(matchupRaw, as="parsed")
-  
-  datalist_matchup = list()
-  for (j in 1:league_size) {
-    df <- data.frame(t(unlist(matchupParsed[j]))) %>% 
-      select(roster_id, points)
-    
-    datalist_matchup[[j]] <- df
-  }
-  datalist_gameweek[[i]] <-bind_rows(datalist_matchup) %>% 
-    mutate(gameweek = i)
-}
-matchup_data2019 <-bind_rows(datalist_gameweek) %>% 
-  mutate(season = 2019)
-
-### 2020 ###
-datalist_gameweek = list()
-for (i in gameweek_start:16) {
-  matchupRaw <- GET(paste('https://api.sleeper.app/v1/league/',league_id2020,'/matchups/', i, sep=""))
-  matchupParsed <- content(matchupRaw, as="parsed")
-  
-  datalist_matchup = list()
-  for (j in 1:league_size) {
-    df <- data.frame(t(unlist(matchupParsed[j]))) %>% 
-      select(roster_id, points)
-    
-    datalist_matchup[[j]] <- df
-  }
-  datalist_gameweek[[i]] <-bind_rows(datalist_matchup) %>% 
-    mutate(gameweek = i)
-}
-matchup_data2020 <-bind_rows(datalist_gameweek) %>% 
-  mutate(season = 2020)
-
-### 2021 ###
-datalist_gameweek = list()
-for (i in gameweek_start:17) {
-  matchupRaw <- GET(paste('https://api.sleeper.app/v1/league/',league_id2021,'/matchups/', i, sep=""))
-  matchupParsed <- content(matchupRaw, as="parsed")
-
-  datalist_matchup = list()
-  for (j in 1:league_size) {
-    df <- data.frame(t(unlist(matchupParsed[j]))) %>%
-      select(roster_id, points)
-
-    datalist_matchup[[j]] <- df
-  }
-  datalist_gameweek[[i]] <-bind_rows(datalist_matchup) %>%
-    mutate(gameweek = i)
-}
-matchup_data2021 <-bind_rows(datalist_gameweek) %>%
-  mutate(season = 2021)
+### 202 ###
+# datalist_gameweek = list()
+# for (i in gameweek_start:17) {
+#   matchupRaw <- GET(paste('https://api.sleeper.app/v1/league/',league_id2021,'/matchups/', i, sep=""))
+#   matchupParsed <- content(matchupRaw, as="parsed")
+# 
+#   datalist_matchup = list()
+#   for (j in 1:league_size) {
+#     df <- data.frame(t(unlist(matchupParsed[j]))) %>%
+#       select(roster_id, points)
+# 
+#     datalist_matchup[[j]] <- df
+#   }
+#   datalist_gameweek[[i]] <-bind_rows(datalist_matchup) %>%
+#     mutate(gameweek = i)
+# }
+# matchup_data2021 <-bind_rows(datalist_gameweek) %>%
+#   mutate(season = 2021)
 
 ### 2022 ###
 datalist_gameweek = list()
@@ -382,10 +341,12 @@ for (i in gameweek_start:gameweek_end) {
 }
 matchup_data2022 <-bind_rows(datalist_gameweek) %>% 
   mutate(season = 2022) %>% 
-  filter(gameweek<gameweek_end)
+  filter(gameweek<=gameweek_end)
 
-score_data_historic <- bind_rows(matchup_data2019, matchup_data2020, matchup_data2021, matchup_data2022)
-rm(matchup_data2019, matchup_data2020, matchup_data2021, matchup_data2022, datalist_gameweek, datalist_matchup)
+# score_data_historic <- bind_rows(matchup_data2019, matchup_data2020, matchup_data2021, matchup_data2022)
+# rm(matchup_data2019, matchup_data2020, matchup_data2021, matchup_data2022, datalist_gameweek, datalist_matchup)
+score_data_historic <- bind_rows(matchup_data2022)
+rm(matchup_data2022, datalist_gameweek, datalist_matchup)
 
 ```
 
@@ -393,7 +354,7 @@ rm(matchup_data2019, matchup_data2020, matchup_data2021, matchup_data2022, datal
 
 # Playoff Hunt
 
-The hunt for the playoffs as it stands. All-play is the record if all teams were to play each other every week. xWins is the number of wins you would have expected so far based on the all-play record. The playoff and bye % is calculated by randomly assigning each team a weekly score (from any team) since the league began in 2019. `r as.character(sims)` different seasons have been simulated using the wins to date and the remaining fixtures for each team. Strength of roster isn't taken into account in these calculations.
+The hunt for the playoffs as it stands. All-play is the record if all teams were to play each other every week. xWins is the number of wins you would have expected so far based on the all-play record. The playoff and bye % is calculated by randomly assigning each team a weekly score (from any team) since the league began this year. `r as.character(sims)` different seasons have been simulated using the wins to date and the remaining fixtures for each team. Strength of roster isn't taken into account in these calculations.
 
 ```{r playoff hunt, echo = F, message = F}
 
