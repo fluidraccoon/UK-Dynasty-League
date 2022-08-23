@@ -1,0 +1,33 @@
+#sidebar h2 {
+  background-color: #347ab8;
+  border-bottom-width: 0px;
+}
+
+#sidebar h2 a {
+  color: #ffffff;
+}
+
+#sidebar {
+  background: #edf0f2;
+}
+
+#sidebar #postamble {
+  background: #347ab8;
+  border-top-width: 0px;
+}
+
+#sidebar #postamble .date {
+  color: #ffffff;
+}
+
+#toc li a {
+  color: #347ab8;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #347ab8;
+}
+
+#content {
+  background: #edf0f2;
+}
