@@ -28,8 +28,6 @@ library(rvest)
 library(xml2)
 library(lubridate)
 
-setwd('C:/Users/danie/OneDrive/Documents/UK-Dynasty-League/')
-
 season <- 2022
 no_of_qbs <- 2
 
@@ -41,7 +39,7 @@ ff_league <- ff_league(dynasty_conn)
 gameweek_start <- 1
 gameweek_end <- 1
 league_size <- as.numeric(ff_league$franchise_count)
-sims <- 150
+sims <- 10000
 draft_rounds <- 4
 
 ### In the pipeline ###
@@ -304,7 +302,7 @@ matchup_id <- matchup_data %>%
 
 # league_id2021 <- '659068468825530368'
 
-### 202 ###
+### 2021 ###
 # datalist_gameweek = list()
 # for (i in gameweek_start:17) {
 #   matchupRaw <- GET(paste('https://api.sleeper.app/v1/league/',league_id2021,'/matchups/', i, sep=""))
@@ -675,7 +673,10 @@ The following table shows the potential points that could have been scored if th
 
 ```{r pp table, echo = F}
 
-knitr::kable(pp_season, format = 'html', align = c('c', 'l', 'c', 'c')) %>% 
+pp_season %>% 
+  arrange(Points) %>% 
+  select(-Wins) %>% 
+  knitr::kable(format = 'html', align = c('c', 'l', 'c')) %>% 
   kable_styling(bootstrap_options = c('striped', 'responsive'),
                 full_width = F,
                 position = 'left')
