@@ -41,7 +41,7 @@ ff_league <- ff_league(dynasty_conn)
 gameweek_start <- 1
 gameweek_end <- 1
 league_size <- as.numeric(ff_league$franchise_count)
-sims <- 100
+sims <- 150
 draft_rounds <- 4
 
 ### In the pipeline ###
