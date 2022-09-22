@@ -1,5 +1,5 @@
 ---
-title: "2022 UK Dynasty League - Week 1"
+title: "2022 UK Dynasty League - Week 2"
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
   rmarkdown::render(input_file,
@@ -39,7 +39,7 @@ dynasty_conn <- sleeper_connect(season = season, league_id = league_id)
 ff_league <- ff_league(dynasty_conn)
 
 gameweek_start <- 1
-gameweek_end <- 1
+gameweek_end <- 2
 league_size <- as.numeric(ff_league$franchise_count)
 sims <- 1000
 draft_rounds <- 4
@@ -419,6 +419,8 @@ pp_weekly_matchup <- pp_week %>%
 
 # Playoff Hunt
 
+## Current Standings
+
 The hunt for the playoffs as it stands. All-play is the record if all teams were to play each other every week. xWins is the number of wins you would have expected so far based on the all-play record. The playoff and bye % is calculated by calculating player scores since 2012 based on their rank and sampling these to give a score for each simulation. The optimal lineup is calculated and then an efficiency score is calculated to give the starting lineup score. **`r as.character(sims)`** different seasons have been simulated using the wins to date and the remaining fixtures for each team. Strength of roster is taken into account in these calculations.
 
 ```{r playoff hunt, echo = F, message = F}
@@ -567,9 +569,11 @@ pts_season %>%
 
 ```
 
+## Wins over Expectation
+
 Wins over expectation (WOE) looks at the relationship between actual wins and all-play wins. This shows how lucky or unlucky a team has been with the schedule.
 
-The dots on the chart below show how many wins the team have, whilst the arrow shows where they should actually be if the H2H format wasn't in place. Teams with arrows pointing left can count themselves unlucky, whilst teams with arrows pointing right are fortunate to have as many wins as they do.
+The dots on the chart below show how many wins the team have, whilst the arrow shows where they should actually be if the H2H format wasn't in place. Teams with arrows pointing right can count themselves unlucky, whilst teams with arrows pointing left are fortunate to have as many wins as they do.
 
 ``` {r wins vs expectation, echo = F, message = F, dev.args = list(bg = 'transparent')}
 
@@ -606,7 +610,6 @@ pts_season %>%
 **`r pts_season %>% filter(WOE == max(WOE)) %>% pull(Manager)`** has been the luckiest so far, with **`r pts_season %>% filter(WOE == max(WOE)) %>% pull(WOE) %>% nth(1)`** more wins than expected.
 
 **`r pts_season %>% filter(WOE == min(WOE)) %>% pull(Manager)`** can feel hard done by, with **`r pts_season %>% filter(WOE == min(WOE)) %>% mutate(WOE = -WOE) %>% pull(WOE) %>% nth(1)`** fewer wins than expected.
-
 
 <br>
 
