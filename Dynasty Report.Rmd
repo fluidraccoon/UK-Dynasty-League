@@ -1,5 +1,5 @@
 ---
-title: "2022 UK Dynasty League - Week 2"
+title: "2022 UK Dynasty League - Week 3"
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
   rmarkdown::render(input_file,
@@ -39,7 +39,7 @@ dynasty_conn <- sleeper_connect(season = season, league_id = league_id)
 ff_league <- ff_league(dynasty_conn)
 
 gameweek_start <- 1
-gameweek_end <- 2
+gameweek_end <- 3
 league_size <- as.numeric(ff_league$franchise_count)
 sims <- 1000
 draft_rounds <- 4
