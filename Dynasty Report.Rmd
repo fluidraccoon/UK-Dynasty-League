@@ -1,5 +1,5 @@
 ---
-title: "2022 UK Dynasty League - Week 4"
+title: "2022 UK Dynasty League - Week 5"
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
   rmarkdown::render(input_file,
@@ -39,7 +39,7 @@ dynasty_conn <- sleeper_connect(season = season, league_id = league_id)
 ff_league <- ff_league(dynasty_conn)
 
 gameweek_start <- 1
-gameweek_end <- 4
+gameweek_end <- 5
 league_size <- as.numeric(ff_league$franchise_count)
 sims <- 1000
 draft_rounds <- 4
@@ -450,7 +450,8 @@ bye_weeks <- ffs_latest_rankings(type = 'draft') %>%
                           team=='NOS' ~ 'NO',
                           team=='NEP' ~ 'NE',
                           T ~ team))
-latest_rankings <- ffs_latest_rankings(type = "week") %>% # also "week", for inseason sims
+latest_rankings <- ffs_latest_rankings(type = "draft")
+latest_rankings_weekly <- ffs_latest_rankings(type = "week") %>%
   left_join(bye_weeks, by = 'team')
 rosters_ffs <- ffs_rosters(dynasty_conn)
 lineup_constraints <- ffs_starter_positions(dynasty_conn)
@@ -473,8 +474,21 @@ projected_scores <- ffs_generate_projections(
   rosters = rosters_ffs # optional, reduces the sample to just rostered players
 )
 
+projected_scores_weekly <- ffs_generate_projections(
+  adp_outcomes = adp_outcomes,
+  latest_rankings = latest_rankings_weekly,
+  n_seasons = sims, # number of seasons
+  weeks = 1:14, # specifies which weeks to generate projections for
+  rosters = rosters_ffs # optional, reduces the sample to just rostered players
+)
+
 roster_scores <- ffs_score_rosters(
   projected_scores = projected_scores,
+  rosters = rosters_ffs
+)
+
+roster_scores_weekly <- ffs_score_rosters(
+  projected_scores = projected_scores_weekly,
   rosters = rosters_ffs
 )
 
@@ -487,9 +501,30 @@ optimal_scores <- ffs_optimise_lineups(
   pos_filter = c("QB","RB","WR","TE","K")
 )
 
+optimal_scores_weekly <- ffs_optimise_lineups(
+  roster_scores = roster_scores_weekly,
+  lineup_constraints = lineup_constraints,
+  lineup_efficiency_mean = 0.775,
+  lineup_efficiency_sd = 0.05,
+  best_ball = FALSE, # or TRUE
+  pos_filter = c("QB","RB","WR","TE","K")
+)
+
 schedules <- ffs_repeat_schedules(actual_schedule, n=sims)
 
 summary_week <- ffs_summarise_week(optimal_scores, schedules) %>% 
+  left_join(.[, c('season', 'week', 'franchise_name', 'optimal_score')], by = c('season', 'week', 'opponent_name'='franchise_name'), suffix = c('', '_opponent')) %>% 
+  left_join(pts_week[, c('pts', 'pts_opponent', 'gameweek', 'roster_id', 'win', 'all_play', 'Manager')], by = c('week'='gameweek', 'franchise_id'='roster_id')) %>% 
+  left_join(pp_week[, c('gameweek', 'roster_id', 'pp', 'pp_opponent', 'win')], by = c('week'='gameweek', 'franchise_id'='roster_id'), suffix = c('', '_pp')) %>% 
+  mutate(selected_pts = if_else(week>gameweek_end, team_score, pts),
+         selected_win = if_else(week>gameweek_end, if_else(result=='W', 1, 0), win),
+         selected_all_play = if_else(week>gameweek_end, allplay_wins, all_play),
+         selected_pp = if_else(week>gameweek_end, optimal_score, pp),
+         selected_pp_opponent = if_else(week>gameweek_end, optimal_score_opponent, pp_opponent),
+         selected_pp_win = if_else(week>gameweek_end, if_else(optimal_score>optimal_score_opponent, 1, 0), win_pp),
+         nxt_wk_win = if_else(week==gameweek_end+1, selected_win, 0))
+
+summary_week_weekly <- ffs_summarise_week(optimal_scores_weekly, schedules) %>% 
   left_join(.[, c('season', 'week', 'franchise_name', 'optimal_score')], by = c('season', 'week', 'opponent_name'='franchise_name'), suffix = c('', '_opponent')) %>% 
   left_join(pts_week[, c('pts', 'pts_opponent', 'gameweek', 'roster_id', 'win', 'all_play', 'Manager')], by = c('week'='gameweek', 'franchise_id'='roster_id')) %>% 
   left_join(pp_week[, c('gameweek', 'roster_id', 'pp', 'pp_opponent', 'win')], by = c('week'='gameweek', 'franchise_id'='roster_id'), suffix = c('', '_pp')) %>% 
@@ -683,7 +718,7 @@ The following chart shows the distribution of points for the upcoming week.
 
 ``` {r upcoming week point projections, echo = F, message = F, warning = F, dev.args = list(bg = 'transparent')}
 
-summary_week %>% 
+summary_week_weekly %>% 
   filter(week==gameweek_end+1) %>% 
   left_join(summary_week %>% group_by(Manager) %>% summarise(Score=sum(team_score)), by = 'Manager') %>% 
   ggplot(aes(x = team_score, y = fct_reorder(Manager, Score), fill = Manager)) +
@@ -713,7 +748,7 @@ Using the outputs from above, the next chart shows the probability of each team 
 
 ``` {r upcoming week win probability, echo = F, message = F, warning = F, dev.args = list(bg = 'transparent')}
 
-summary_week %>% 
+summary_week_weekly %>% 
   filter(week==gameweek_end+1) %>% 
   left_join(matchup_id[, c('roster_id', 'gameweek', 'matchup_id')], by = c('franchise_id'='roster_id', 'week'='gameweek')) %>% 
   group_by(Manager, matchup_id) %>% 
