@@ -1,5 +1,5 @@
 ---
-title: "2022 UK Dynasty League - Week 13"
+title: "2023 UK Dynasty League - Week 3"
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
   rmarkdown::render(input_file,
@@ -30,7 +30,7 @@ library(xml2)
 library(lubridate)
 library(scales)
 
-season <- 2022
+season <- 2023
 no_of_qbs <- 2
 
 league_id <- sleeper_userleagues('DanCoulton') %>% filter(league_name == 'UK Dynasty League ') %>% pull(league_id)
@@ -39,7 +39,7 @@ dynasty_conn <- sleeper_connect(season = season, league_id = league_id)
 ff_league <- ff_league(dynasty_conn)
 
 gameweek_start <- 1
-gameweek_end <- 13
+gameweek_end <- 3
 league_size <- as.numeric(ff_league$franchise_count)
 sims <- 1000
 draft_rounds <- 4
@@ -81,7 +81,8 @@ KTC$Info <- KTC_dynasty_url %>% html_nodes(xpath = '//*[@id="rankings-page-ranki
 
 df_KTC <- bind_cols(KTC) %>% 
   rowwise() %>% 
-  mutate(Position = strsplit(Info, ' ')[[1]][1],
+  mutate(Info = str_trim(Info),
+         Position = strsplit(Info, ' ')[[1]][1],
          Team = strsplit(Info, ' ')[[1]][3],
          Value = as.numeric(Value)) %>% 
   select(-Info) %>% 
@@ -132,6 +133,8 @@ df_KTC_join <- df_KTC %>%
                             Player=='Olabisi Johnson' ~ 'Bisi Johnson',
                             Player=='Kyle Phillips' ~ 'Kyle Philips',
                             Player=='Lamical Perine' ~ "La'Mical Perine",
+                            Player=='Devon Achane' ~ "De'Von Achane",
+                            Player=='Nathaniel Dell' ~ 'Tank Dell',
                             T ~ Player)) %>% 
   left_join(player_data[,c('full_name','team','position','player_id')], by=c('Player'='full_name', 'Position'='position', 'Team'='team'))
 
@@ -154,7 +157,8 @@ KTC_fantasy$Info <- KTC_fantasy_url %>% html_nodes(xpath = '//*[@id="rankings-pa
 
 df_KTC_fantasy <- bind_cols(KTC_fantasy) %>% 
   rowwise() %>% 
-  mutate(Position = strsplit(Info, ' ')[[1]][1],
+  mutate(Info = str_trim(Info),
+         Position = strsplit(Info, ' ')[[1]][1],
          Team = strsplit(Info, ' ')[[1]][3],
          Value = as.numeric(Value)) %>% 
   select(-Info) %>% 
@@ -205,6 +209,8 @@ df_KTC_fantasy_join <- df_KTC_fantasy %>%
                             Player=='Olabisi Johnson' ~ 'Bisi Johnson',
                             Player=='Kyle Phillips' ~ 'Kyle Philips',
                             Player=='Lamical Perine' ~ "La'Mical Perine",
+                            Player=='Devon Achane' ~ "De'Von Achane",
+                            Player=='Nathaniel Dell' ~ 'Tank Dell',
                             T ~ Player)) %>% 
   left_join(player_data[,c('full_name','team','position','player_id')], by=c('Player'='full_name', 'Position'='position', 'Team'='team'))
 
@@ -398,7 +404,7 @@ pp_season <- pp_week %>%
   group_by(Manager) %>% 
   summarise(Wins = sum(win),
             Points = sum(pp)) %>% 
-  arrange(desc(Wins), desc(Points)) %>% 
+  arrange(desc(Points)) %>% 
   mutate(Rank = seq.int(nrow(.))) %>% 
   select(Rank, Manager, Wins, Points)
 
@@ -815,9 +821,9 @@ The next table tracks the league position by week for each team in the league. T
 position <- pts_week %>% 
   filter(gameweek<=gameweek_end) %>% 
   group_by(Manager) %>% 
-  summarise(csum_win = cumsum(win),
+  reframe(csum_win = cumsum(win),
             csum_pts = cumsum(pts)) %>% 
-  mutate(gameweek = rep(1:gameweek_end)) %>% 
+  mutate(gameweek = rep(1:gameweek_end, league_size)) %>% 
   ungroup() %>% 
   group_by(gameweek) %>% 
   mutate(Position = league_size + 1 - rank(csum_win + csum_pts/10000))
@@ -1222,7 +1228,7 @@ div(roster_age %>%
 
 ------------------------------------------------------------------------
 
-# 2022 Trades
+# 2023 Trades
 
 ```{r trades, echo=F}
 
@@ -1240,7 +1246,7 @@ div(transactions %>%
   arrange(desc(Trade_Count)) %>% 
   plot_ly(y = ~Trade_Count) %>% 
   add_trace(x = ~Manager, type = 'bar') %>% 
-  layout(title = ' Number of 2022 Trades by Team',
+  layout(title = ' Number of 2023 Trades by Team',
          xaxis = list(title = 'Team', categoryorder = "array", categoryarray = ~Trade_Count, fixedrange = TRUE),
          yaxis = list(title = 'Number of Trades', fixedrange = TRUE),
          paper_bgcolor = 'transparent', plot_bgcolor = 'transparent'), align = 'left')
